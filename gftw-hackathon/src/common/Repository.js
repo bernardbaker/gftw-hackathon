@@ -1,3 +1,5 @@
+import { array } from "./ExtraContent";
+
 class Repository extends HTMLElement {
   constructor() {
     super();
@@ -77,6 +79,17 @@ class Repository extends HTMLElement {
           margin-right: 16px;
           border-radius: 50%;
         }
+
+        #showContentButton {
+          background-color: #4CAF50; /* Green */
+          border: none;
+          color: white;
+          padding: 5px 10px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 15px;
+        }
       </style>
     `;
   }
@@ -101,19 +114,37 @@ class Repository extends HTMLElement {
     return `<div class="Card Card--error">Error: ${message}</div>`;
   }
 
-  cardTemplate({ owner, full_name, description }) {
+  cardTemplate({ id, owner, full_name, description }) {
     return `
       <div class="Card">
         <aside>
-          <img width="48" height="48" class="Avatar" src="${owner.avatar_url}" alt="Profile picture for ${owner.login}" />
+          <img width="48" height="48" class="Avatar" src="${
+            owner.avatar_url
+          }" alt="Profile picture for ${owner.login}" />
         </aside>
         <header>
           <h2 class="Card__title">${full_name}</h2>
           <span class="Card__meta">${description}</span>
+          <br><br>
+          <button id="showContentButton" onClick="${content(
+            id
+          )}">Unlock Content</button>
+          
         </header>
       </div>
     `;
   }
+}
+
+function content(value) {
+  console.log(value + " this is my unique ID");
+  let obj = array.find((obj) => obj.id === value);
+  console.log(obj);
+  var tag = document.createElement("p");
+  var info = document.createTextNode(obj.info);
+  tag.appendChild(info);
+  var element = document.createElement("div");
+  element.appendChild(tag);
 }
 
 window.customElements.define("github-repo", Repository);
