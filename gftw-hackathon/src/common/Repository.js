@@ -7,15 +7,31 @@ class Repository extends HTMLElement {
     this.repoDetails = null;
 
     this.name = this.getAttribute("name");
+    console.log(this.name);
     this.endpoint = `https://api.github.com/repos/${this.name}`;
     this.getDetails = this.getDetails.bind(this);
 
     this.innerHTML = `<h1>Loading</h1>`;
+
+    this.handleRequest = this.handleRequest.bind(this);
   }
 
   async connectedCallback() {
-    let repo = await this.getDetails();
-    this.repoDetails = repo;
+    //   TODO use this object for real details
+    // let repo = await this.getDetails();
+    // this.repoDetails = repo;
+
+    // TODO use this object in development, it doesn't suffer from CORS cross origin request failure
+    this.repoDetails = {
+      owner: {
+        avatar_url:
+          "https://i1.pngguru.com/preview/137/834/449/cartoon-cartoon-character-avatar-drawing-film-ecommerce-facial-expression-png-clipart.jpg",
+        login: "Bernard Baker",
+      },
+      id: 263711101,
+      full_name: "Bernard Baker",
+      description: "This is a short description",
+    };
     this.initShadowDom();
   }
 
@@ -23,6 +39,22 @@ class Repository extends HTMLElement {
     let shadowRoot = this.attachShadow({ mode: "open" });
     shadowRoot.innerHTML = this.template;
   }
+
+  handleRequest = (value) => {
+    console.log(value + " this is my unique ID");
+    let obj = array.find((obj) => obj.id === value);
+    console.log(obj, array);
+    var tag = document.createElement("p");
+    var info = document.createTextNode(obj.info);
+    tag.appendChild(info);
+    var element = document.createElement("div");
+    element.setAttribute("class", "paragraph");
+    element.appendChild(tag);
+    document
+      .querySelector("github-repo")
+      .shadowRoot.querySelector(`#content-${value}`)
+      .appendChild(element);
+  };
 
   get style() {
     return `
@@ -90,6 +122,16 @@ class Repository extends HTMLElement {
           display: inline-block;
           font-size: 15px;
         }
+
+        .content {
+            float: left;
+            margin: 1em 0;
+        }
+
+        .paragraph {
+            padding: 1em 0;
+        }
+
       </style>
     `;
   }
@@ -100,7 +142,7 @@ class Repository extends HTMLElement {
     if (repo.message) {
       return this.style + this.cardError(repo);
     } else {
-      return this.style + this.cardTemplate(repo);
+      return this.style + this.cardTemplate(repo, this.root);
     }
   }
 
@@ -118,33 +160,18 @@ class Repository extends HTMLElement {
     return `
       <div class="Card">
         <aside>
-          <img width="48" height="48" class="Avatar" src="${
-            owner.avatar_url
-          }" alt="Profile picture for ${owner.login}" />
+          <img width="48" height="48" class="Avatar" src="${owner.avatar_url}" alt="Profile picture for ${owner.login}" />
         </aside>
         <header>
           <h2 class="Card__title">${full_name}</h2>
           <span class="Card__meta">${description}</span>
           <br><br>
-          <button id="showContentButton" onClick="${content(
-            id
-          )}">Unlock Content</button>
-          
+          <button id="showContentButton" onClick="console.log(document.activeElement.handleRequest(${id}))">Unlock Content</button>
         </header>
+        <section id="content-${id}" class="content"></section>
       </div>
     `;
   }
-}
-
-function content(value) {
-  console.log(value + " this is my unique ID");
-  let obj = array.find((obj) => obj.id === value);
-  console.log(obj);
-  var tag = document.createElement("p");
-  var info = document.createTextNode(obj.info);
-  tag.appendChild(info);
-  var element = document.createElement("div");
-  element.appendChild(tag);
 }
 
 window.customElements.define("github-repo", Repository);
