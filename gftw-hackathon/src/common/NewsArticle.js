@@ -1,14 +1,15 @@
 import { array } from "./ExtraContent";
 
-class Repository extends HTMLElement {
+class NewsArticle extends HTMLElement {
   constructor() {
     super();
 
     this.repoDetails = null;
 
-    this.name = this.getAttribute("name");
-    console.log(this.name);
-    this.endpoint = `https://api.github.com/repos/${this.name}`;
+    this.id = this.getAttribute("id");
+    console.log(this.id);
+    this.endpoint = `https://api.github.com/gists/${this.id}`;
+
     this.getDetails = this.getDetails.bind(this);
 
     this.innerHTML = `<h1>Loading</h1>`;
@@ -17,25 +18,14 @@ class Repository extends HTMLElement {
   }
 
   async connectedCallback() {
-    /**
-     * use this object for real details
-     */
-    // let repo = await this.getDetails();
-    // this.repoDetails = repo;
+    //   TODO use this object for real details
+    let repo = await this.getDetails();
+    this.repoDetails = repo;
+    console.log(repo);
 
-    /**
-     * use this object in development, it doesn't suffer from CORS cross origin request failure
-     */
-    this.repoDetails = {
-      owner: {
-        avatar_url:
-          "https://i1.pngguru.com/preview/137/834/449/cartoon-cartoon-character-avatar-drawing-film-ecommerce-facial-expression-png-clipart.jpg",
-        login: "Bernard Baker",
-      },
-      id: 263711101,
-      full_name: "Bernard Baker",
-      description: "This is a short description",
-    };
+    console.log(this.repoDetails);
+    array.push(this.repoDetails);
+
     this.initShadowDom();
   }
 
@@ -47,14 +37,21 @@ class Repository extends HTMLElement {
   handleRequest = (value) => {
     console.log(value + " this is my unique ID");
     let obj = array.find((obj) => obj.id === value);
+    // console.log(obj, array);
+
     var tag = document.createElement("p");
-    var info = document.createTextNode(obj.info);
+    // TODO - use object keys to Array.pop() off the next data
+    /**
+     * Look at the obj.files in the debugger console.
+     */
+    var info = document.createTextNode(obj.files["Chapter 1"].content);
+    //
     tag.appendChild(info);
     var element = document.createElement("div");
     element.setAttribute("class", "paragraph");
     element.appendChild(tag);
     document
-      .querySelector("github-repo")
+      .querySelector("news-article")
       .shadowRoot.querySelector(`#content-${value}`)
       .appendChild(element);
   };
@@ -145,7 +142,7 @@ class Repository extends HTMLElement {
     if (repo.message) {
       return this.style + this.cardError(repo);
     } else {
-      return this.style + this.cardTemplate(repo, this.root);
+      return this.style + this.cardTemplate(repo);
     }
   }
 
@@ -159,17 +156,25 @@ class Repository extends HTMLElement {
     return `<div class="Card Card--error">Error: ${message}</div>`;
   }
 
-  cardTemplate({ id, owner, full_name, description }) {
+  cardTemplate({ id, owner, files, created_at }) {
     return `
       <div class="Card">
         <aside>
-          <img width="48" height="48" class="Avatar" src="${owner.avatar_url}" alt="Profile picture for ${owner.login}" />
+          <img width="48" height="48" class="Avatar" src="${
+            owner.avatar_url
+          }" alt="Profile picture for ${owner.login}" />
         </aside>
         <header>
-          <h2 class="Card__title">${full_name}</h2>
-          <span class="Card__meta">${description}</span>
+          <h2 class="Card__title">${files.Title.content}</h2>
+          <span class="Card__meta">${new Date(
+            created_at
+          ).toLocaleDateString()} - ${new Date(
+      created_at
+    ).toLocaleTimeString()}</span>
           <br><br>
-          <button id="showContentButton" onClick="console.log(document.activeElement.handleRequest(${id}))">Unlock Content</button>
+          <blockquote>${files["Chapter 1"].content}</blockquote>
+          <br><br>
+          <button id="showContentButton" onClick="document.activeElement.handleRequest('${id}')">Unlock Content</button>
         </header>
         <section id="content-${id}" class="content"></section>
       </div>
@@ -177,4 +182,4 @@ class Repository extends HTMLElement {
   }
 }
 
-window.customElements.define("github-repo", Repository);
+window.customElements.define("news-article", NewsArticle);
