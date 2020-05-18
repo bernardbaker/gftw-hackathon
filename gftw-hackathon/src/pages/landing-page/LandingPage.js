@@ -1,14 +1,15 @@
 import React from "react";
+import News from "./News";
+import Header from "../../common/Header";
+import Footer from "../../common/Footer";
+import "./LandingPage.css";
 
 const LandingPage = () => {
-  const importWebComponents = async () => {
-    await import("../../common/NewsArticle");
-  };
-  importWebComponents();
-
   return (
     <>
-      <news-article id="eba1cbef76ebe0f945afa196f9fb3027"></news-article>
+      <Header />
+      <News />
+      <Footer />
     </>
   );
 };
