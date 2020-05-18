@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { array } from "./ShoppingCart";
 import Download from "./Download";
-import "./Download.css";
 
 class NewsArticle extends HTMLElement {
   constructor() {
@@ -19,6 +18,7 @@ class NewsArticle extends HTMLElement {
     this.innerHTML = `<h1>Loading</h1>`;
 
     this.handleRequest = this.handleRequest.bind(this);
+    this.toggleClass = this.toggleClass.bind(this);
   }
 
   async connectedCallback() {
@@ -33,6 +33,8 @@ class NewsArticle extends HTMLElement {
     const dom = this.initShadowDom();
 
     const controls = dom.getElementById("controls");
+    controls.onclick = this.toggleClass;
+
     ReactDOM.render(<Download />, controls);
   }
 
@@ -148,11 +150,7 @@ class NewsArticle extends HTMLElement {
           height: 48px;
           border-radius: 50%;
           -webkit-tap-highlight-color: transparent;
-          /* //transform: scale(2); */
-          /* //centering */
-          /* position: absolute; */
-          /* top: calc(50% - 24px); */
-          /* left: calc(50% - 24px); */
+          pointer-events: none;
         }
 
         .btn-download:hover {
@@ -163,6 +161,7 @@ class NewsArticle extends HTMLElement {
           margin: 16px 0 0 16px;
           fill: none;
           transform: translate3d(0, 0, 0);
+          pointer-events: none;
         }
 
         .btn-download svg polyline,
@@ -259,6 +258,17 @@ class NewsArticle extends HTMLElement {
       </div>
     `;
   }
+
+  toggleClass = (e) => {
+    const node = e.target.querySelector(".btn-download");
+    if (node.classList.contains("downloaded")) {
+      node.classList.remove("downloaded");
+      //   TODO remove this news item from the shopping cart
+    } else {
+      node.classList.add("downloaded");
+      //   TODO add this news item from the shopping cart
+    }
+  };
 }
 
 window.customElements.define("news-article", NewsArticle);

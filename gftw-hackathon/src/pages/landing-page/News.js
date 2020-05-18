@@ -10,7 +10,7 @@ const News = () => {
   return (
     <>
       <section>
-        <div class="column">
+        <div className="column">
           <news-article id="eba1cbef76ebe0f945afa196f9fb3027"></news-article>
           {/* <news-article id="9719373229cdbc235ef88bb4d693d53c"></news-article>
           <news-article id="eba1cbef76ebe0f945afa196f9fb3027"></news-article>
