@@ -1,0 +1,40 @@
+.flex-grid {
+  display: flex;
+  top: 50%;
+  left: 50%;
+  text-align: center;
+  flex-wrap: wrap;
+  min-height: 20vh;
+  width: 900px;
+  margin: 20px;
+  border: 1px dotted black;
+}
+#top {
+  display: block;
+  text-align: center;
+}
+.col {
+  flex: 1;
+  border: 1px dotted black;
+  justify-content: space-evenly;
+}
+
+button {
+  font-size: 18px;
+}
+.button-align {
+  float: right;
+  margin-right: 10px;
+  margin-top: 130px;
+}
+#parent-div {
+  width: 100%;
+}
+h1 {
+  color: #111;
+  font-family: "Helvetica Neue", sans-serif;
+  font-size: 80px;
+  font-weight: bold;
+  letter-spacing: -1px;
+  line-height: 1;
+}
