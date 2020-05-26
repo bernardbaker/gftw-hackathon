@@ -263,7 +263,11 @@ class NewsArticle extends HTMLElement {
     const node = e.target.querySelector(".btn-download");
     if (node.classList.contains("downloaded")) {
       node.classList.remove("downloaded");
-      //   TODO remove this news item from the shopping cart
+      //   REVIEW remove this news item from the shopping cart
+      const foundItemIndex = array.findIndex(
+        (element) => element.id === this.id
+      );
+      array.splice(foundItemIndex, 1);
     } else {
       node.classList.add("downloaded");
       //   TODO add this news item from the shopping cart
