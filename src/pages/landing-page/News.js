@@ -11,13 +11,13 @@ const News = () => {
     <>
       <section>
         <div className="column">
-          <news-article id="eba1cbef76ebe0f945afa196f9fb3027"></news-article>
+          <news-article data-article-ref="eba1cbef76ebe0f945afa196f9fb3027"></news-article>
         </div>
         <div class="column">
-          <news-article id="ba9e844de1b0c6f8f8135154a8480d76"></news-article>
+          <news-article data-article-ref="9719373229cdbc235ef88bb4d693d53c"></news-article>
         </div>
         <div class="column">
-          <news-article id="ba9e844de1b0c6f8f8135154a8480d76"></news-article>
+          <news-article data-article-ref="ba9e844de1b0c6f8f8135154a8480d76"></news-article>
         </div>
       </section>
     </>
