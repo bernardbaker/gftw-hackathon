@@ -5,6 +5,7 @@ const News = () => {
   const importWebComponents = async () => {
     await import("../../common/NewsArticle");
   };
+
   importWebComponents();
 
   return (
