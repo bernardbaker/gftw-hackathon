@@ -12,7 +12,6 @@ header + section {
 }
 
 header + section > div.column {
-  border: 1px dotted red;
   flex-grow: 1;
   width: 100%;
 }
@@ -30,7 +29,6 @@ button {
 /* Medium devices (landscape tablets, 768px and up) */
 @media only screen and (min-width: 768px) {
   header + section > div.column {
-    border: 1px dotted blue;
     flex-grow: 1;
     width: 33%;
   }
