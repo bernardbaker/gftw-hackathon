@@ -13,7 +13,7 @@ class NewsArticle extends HTMLElement {
 
     this.repoDetails = null;
 
-    this.id = this.getAttribute("id");
+    this.id = this.getAttribute("data-article-ref");
     console.log(this.id);
     this.endpoint = `https://api.github.com/gists/${this.id}`;
 
@@ -92,7 +92,7 @@ class NewsArticle extends HTMLElement {
       element.setAttribute("class", "paragraph");
       element.appendChild(tag);
       document
-        .querySelector(`#${contentId}`)
+        .querySelector(`[data-article-ref='${contentId}']`)
         .shadowRoot.querySelector(`#content-${contentId}`)
         .appendChild(element);
     }
