@@ -1,11 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { array } from "./ShoppingCart";
+import { array, cart } from "./ShoppingCart";
 import Download from "./Download";
 
 class NewsArticle extends HTMLElement {
   constructor() {
     super();
+
+    this.length = 0;
+    this.selectedContent = null;
+    this.paragraphCount = 1;
 
     this.repoDetails = null;
 
@@ -18,7 +22,9 @@ class NewsArticle extends HTMLElement {
     this.innerHTML = `<h1>Loading</h1>`;
 
     this.handleRequest = this.handleRequest.bind(this);
+    this.handleArticleSelection = this.handleArticleSelection.bind(this);
     this.toggleClass = this.toggleClass.bind(this);
+    this.getNextParagraph = this.getNextParagraph.bind(this);
   }
 
   async connectedCallback() {
@@ -30,10 +36,15 @@ class NewsArticle extends HTMLElement {
     console.log(this.repoDetails);
     array.push(this.repoDetails);
 
+    this.length = parseInt(repo.files.Length.content);
+
+    console.log(`There are ${this.length} paragraphs in this article`);
+
     const dom = this.initShadowDom();
 
     const controls = dom.getElementById("controls");
-    controls.onclick = this.toggleClass;
+    controls.onclick = this.handleArticleSelection;
+    controls.setAttribute("data-id", this.repoDetails.id);
 
     ReactDOM.render(<Download />, controls);
   }
@@ -45,26 +56,47 @@ class NewsArticle extends HTMLElement {
     return shadowRoot;
   }
 
-  handleRequest = (value) => {
-    console.log(value + " this is my unique ID");
-    let obj = array.find((obj) => obj.id === value);
-    // console.log(obj, array);
+  handleArticleSelection = (e) => {
+    e.target.onclick = null;
 
-    var tag = document.createElement("p");
-    // TODO - use object keys to Array.pop() off the next data
-    /**
-     * Look at the obj.files in the debugger console.
-     */
-    var info = document.createTextNode(obj.files["Chapter 1"].content);
-    //
-    tag.appendChild(info);
-    var element = document.createElement("div");
-    element.setAttribute("class", "paragraph");
-    element.appendChild(tag);
+    this.toggleClass(e);
+    const id = e.target.getAttribute("data-id");
+
+    if (cart.indexOf(id) === -1) {
+      cart.push(id);
+    }
+
+    console.log(cart);
+  };
+
+  handleRequest = (pointer, contentId) => {
+    console.log(pointer + " this is my unique payment pointer ID");
+
+    // Update the meta data content for the payment pointer
     document
-      .querySelector("news-article")
-      .shadowRoot.querySelector(`#content-${value}`)
-      .appendChild(element);
+      .querySelector("meta[name='monetization']")
+      .setAttribute("content", pointer);
+
+    let obj = array.find((obj) => obj.id === contentId);
+
+    this.selectedContent = obj;
+
+    const paragraph = this.getNextParagraph();
+
+    if (paragraph) {
+      var tag = document.createElement("p");
+
+      var info = document.createTextNode(paragraph);
+      //
+      tag.appendChild(info);
+      var element = document.createElement("div");
+      element.setAttribute("class", "paragraph");
+      element.appendChild(tag);
+      document
+        .querySelector("news-article")
+        .shadowRoot.querySelector(`#content-${contentId}`)
+        .appendChild(element);
+    }
   };
 
   get style() {
@@ -221,11 +253,12 @@ class NewsArticle extends HTMLElement {
   }
 
   async getDetails() {
-    // return await fetch(this.endpoint, { mode: "cors" }).then((res) =>
-    //   res.json()
-    // );
+    // return await fetch(this.endpoint, {
+    //   mode: "cors",
+    // }).then((res) => res.json());
+
     return JSON.parse(
-      `{"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027","forks_url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/forks","commits_url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/commits","id":"eba1cbef76ebe0f945afa196f9fb3027","node_id":"MDQ6R2lzdGViYTFjYmVmNzZlYmUwZjk0NWFmYTE5NmY5ZmIzMDI3","git_pull_url":"https://gist.github.com/eba1cbef76ebe0f945afa196f9fb3027.git","git_push_url":"https://gist.github.com/eba1cbef76ebe0f945afa196f9fb3027.git","html_url":"https://gist.github.com/eba1cbef76ebe0f945afa196f9fb3027","files":{"Chapter 1":{"filename":"Chapter 1","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/4c571dd1c7e353b8c698b71950e1d25009478a33/Chapter%201","size":684,"truncated":false,"content":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin porta ante a tincidunt molestie. Maecenas dolor justo, semper sed venenatis in, condimentum quis est. Vestibulum mollis purus non nibh laoreet, at venenatis massa tincidunt. Quisque vel augue faucibus augue pellentesque fringilla. Curabitur vehicula magna nec maximus aliquam. Nam tellus quam, laoreet ac imperdiet eu, tristique ut leo. Donec tincidunt vel nibh sed molestie. Ut vitae tortor elit. Praesent aliquam elit id diam varius, et facilisis mi egestas. Nam rutrum, nulla ut commodo accumsan, felis ligula egestas eros, eu ullamcorper enim justo in leo. Sed ipsum nisl, mollis non erat ut, faucibus fringilla leo. "},"Chapter 2":{"filename":"Chapter 2","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/4c571dd1c7e353b8c698b71950e1d25009478a33/Chapter%202","size":684,"truncated":false,"content":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin porta ante a tincidunt molestie. Maecenas dolor justo, semper sed venenatis in, condimentum quis est. Vestibulum mollis purus non nibh laoreet, at venenatis massa tincidunt. Quisque vel augue faucibus augue pellentesque fringilla. Curabitur vehicula magna nec maximus aliquam. Nam tellus quam, laoreet ac imperdiet eu, tristique ut leo. Donec tincidunt vel nibh sed molestie. Ut vitae tortor elit. Praesent aliquam elit id diam varius, et facilisis mi egestas. Nam rutrum, nulla ut commodo accumsan, felis ligula egestas eros, eu ullamcorper enim justo in leo. Sed ipsum nisl, mollis non erat ut, faucibus fringilla leo. "},"Title":{"filename":"Title","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/9cf0c7ade37ad9cb6070ac7138b1a6efb95ee24f/Title","size":16,"truncated":false,"content":"News Story Title"}},"public":true,"created_at":"2020-05-17T17:21:13Z","updated_at":"2020-05-17T17:48:31Z","description":"0987654321","comments":0,"user":null,"comments_url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/comments","owner":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"forks":[],"history":[{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"4a06710780795cfdbbf014055b8d61d9b5808408","committed_at":"2020-05-17T17:48:30Z","change_status":{"total":8,"additions":3,"deletions":5},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/4a06710780795cfdbbf014055b8d61d9b5808408"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"496085e2adc6e66b6222f2c5118cdec24758f742","committed_at":"2020-05-17T17:37:50Z","change_status":{"total":21,"additions":5,"deletions":16},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/496085e2adc6e66b6222f2c5118cdec24758f742"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"64f6e582242e25e63129f324d42348d01cdc37bb","committed_at":"2020-05-17T17:21:12Z","change_status":{"total":16,"additions":16,"deletions":0},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/64f6e582242e25e63129f324d42348d01cdc37bb"}],"truncated":false}`
+      `{"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027","forks_url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/forks","commits_url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/commits","id":"eba1cbef76ebe0f945afa196f9fb3027","node_id":"MDQ6R2lzdGViYTFjYmVmNzZlYmUwZjk0NWFmYTE5NmY5ZmIzMDI3","git_pull_url":"https://gist.github.com/eba1cbef76ebe0f945afa196f9fb3027.git","git_push_url":"https://gist.github.com/eba1cbef76ebe0f945afa196f9fb3027.git","html_url":"https://gist.github.com/eba1cbef76ebe0f945afa196f9fb3027","files":{"Chapter 1":{"filename":"Chapter 1","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/4c571dd1c7e353b8c698b71950e1d25009478a33/Chapter%201","size":684,"truncated":false,"content":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin porta ante a tincidunt molestie. Maecenas dolor justo, semper sed venenatis in, condimentum quis est. Vestibulum mollis purus non nibh laoreet, at venenatis massa tincidunt. Quisque vel augue faucibus augue pellentesque fringilla. Curabitur vehicula magna nec maximus aliquam. Nam tellus quam, laoreet ac imperdiet eu, tristique ut leo. Donec tincidunt vel nibh sed molestie. Ut vitae tortor elit. Praesent aliquam elit id diam varius, et facilisis mi egestas. Nam rutrum, nulla ut commodo accumsan, felis ligula egestas eros, eu ullamcorper enim justo in leo. Sed ipsum nisl, mollis non erat ut, faucibus fringilla leo. "},"Chapter 2":{"filename":"Chapter 2","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/4c571dd1c7e353b8c698b71950e1d25009478a33/Chapter%202","size":684,"truncated":false,"content":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin porta ante a tincidunt molestie. Maecenas dolor justo, semper sed venenatis in, condimentum quis est. Vestibulum mollis purus non nibh laoreet, at venenatis massa tincidunt. Quisque vel augue faucibus augue pellentesque fringilla. Curabitur vehicula magna nec maximus aliquam. Nam tellus quam, laoreet ac imperdiet eu, tristique ut leo. Donec tincidunt vel nibh sed molestie. Ut vitae tortor elit. Praesent aliquam elit id diam varius, et facilisis mi egestas. Nam rutrum, nulla ut commodo accumsan, felis ligula egestas eros, eu ullamcorper enim justo in leo. Sed ipsum nisl, mollis non erat ut, faucibus fringilla leo. "},"Length":{"filename":"Length","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/d8263ee9860594d2806b0dfd1bfd17528b0ba2a4/Length","size":1,"truncated":false,"content":"2"},"Snippet":{"filename":"Snippet","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/76753f7259a3c28d32ae2b177b03ac6bcf17356c/Snippet","size":29,"truncated":false,"content":"A snippet about the new story"},"Title":{"filename":"Title","type":"text/plain","language":null,"raw_url":"https://gist.githubusercontent.com/bernardbaker/eba1cbef76ebe0f945afa196f9fb3027/raw/9cf0c7ade37ad9cb6070ac7138b1a6efb95ee24f/Title","size":16,"truncated":false,"content":"News Story Title"}},"public":true,"created_at":"2020-05-17T17:21:13Z","updated_at":"2020-06-05T09:07:11Z","description":"$ilp.uphold.com/pmFKKEYKm3rk","comments":0,"user":null,"comments_url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/comments","owner":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"forks":[],"history":[{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"773886659b0a8c29fc74313dda94ef00331a3a88","committed_at":"2020-06-05T09:07:11Z","change_status":{"total":0,"additions":0,"deletions":0},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/773886659b0a8c29fc74313dda94ef00331a3a88"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"c66bd3656294161375cdf45a9defd2d6a9764d75","committed_at":"2020-06-05T08:32:22Z","change_status":{"total":0,"additions":0,"deletions":0},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/c66bd3656294161375cdf45a9defd2d6a9764d75"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"dc15d09be11af8f6272272d1201c3a89d0c3ffd3","committed_at":"2020-06-04T07:45:15Z","change_status":{"total":1,"additions":1,"deletions":0},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/dc15d09be11af8f6272272d1201c3a89d0c3ffd3"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"ffffba362d38cddf2b87c971e08fd16dcd727798","committed_at":"2020-06-04T07:35:24Z","change_status":{"total":1,"additions":1,"deletions":0},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/ffffba362d38cddf2b87c971e08fd16dcd727798"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"4a06710780795cfdbbf014055b8d61d9b5808408","committed_at":"2020-05-17T17:48:30Z","change_status":{"total":8,"additions":3,"deletions":5},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/4a06710780795cfdbbf014055b8d61d9b5808408"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"496085e2adc6e66b6222f2c5118cdec24758f742","committed_at":"2020-05-17T17:37:50Z","change_status":{"total":21,"additions":5,"deletions":16},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/496085e2adc6e66b6222f2c5118cdec24758f742"},{"user":{"login":"bernardbaker","id":13556172,"node_id":"MDQ6VXNlcjEzNTU2MTcy","avatar_url":"https://avatars2.githubusercontent.com/u/13556172?v=4","gravatar_id":"","url":"https://api.github.com/users/bernardbaker","html_url":"https://github.com/bernardbaker","followers_url":"https://api.github.com/users/bernardbaker/followers","following_url":"https://api.github.com/users/bernardbaker/following{/other_user}","gists_url":"https://api.github.com/users/bernardbaker/gists{/gist_id}","starred_url":"https://api.github.com/users/bernardbaker/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/bernardbaker/subscriptions","organizations_url":"https://api.github.com/users/bernardbaker/orgs","repos_url":"https://api.github.com/users/bernardbaker/repos","events_url":"https://api.github.com/users/bernardbaker/events{/privacy}","received_events_url":"https://api.github.com/users/bernardbaker/received_events","type":"User","site_admin":false},"version":"64f6e582242e25e63129f324d42348d01cdc37bb","committed_at":"2020-05-17T17:21:12Z","change_status":{"total":16,"additions":16,"deletions":0},"url":"https://api.github.com/gists/eba1cbef76ebe0f945afa196f9fb3027/64f6e582242e25e63129f324d42348d01cdc37bb"}],"truncated":false}`
     );
   }
 
@@ -233,7 +266,7 @@ class NewsArticle extends HTMLElement {
     return `<div class="Card Card--error">Error: ${message}</div>`;
   }
 
-  cardTemplate({ id, owner, files, created_at }) {
+  cardTemplate({ description, id, owner, files, created_at }) {
     return `
       <div class="Card">
         <aside>
@@ -250,9 +283,9 @@ class NewsArticle extends HTMLElement {
     ).toLocaleTimeString()}</span>
           <div id="controls"></div>
           <br><br>
-          <blockquote>${files["Chapter 1"].content}</blockquote>
+          <blockquote>${files["Snippet"].content}</blockquote>
           <br><br>
-          <button id="showContentButton" onClick="document.activeElement.handleRequest('${id}')">Unlock Content</button>
+          <button id="showContentButton" onClick="document.activeElement.handleRequest('${description}','${id}')">Read next paragraph</button>
         </header>
         <section id="content-${id}" class="content"></section>
       </div>
@@ -263,10 +296,21 @@ class NewsArticle extends HTMLElement {
     const node = e.target.querySelector(".btn-download");
     if (node.classList.contains("downloaded")) {
       node.classList.remove("downloaded");
-      //   TODO remove this news item from the shopping cart
     } else {
       node.classList.add("downloaded");
-      //   TODO add this news item from the shopping cart
+    }
+  };
+
+  getNextParagraph = () => {
+    if (this.paragraphCount <= this.length) {
+      const content = this.selectedContent.files[
+        `Chapter ${this.paragraphCount++}`
+      ].content;
+      return content;
+    } else if (this.paragraphCount++ === this.length + 1) {
+      return "Thanks for reading - from the author";
+    } else {
+      return null;
     }
   };
 }
